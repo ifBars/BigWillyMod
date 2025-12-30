@@ -1,0 +1,33 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BigWillyMod", "BigWillyMod.csproj", "{E31E6BC5-65D3-434E-AEF9-7CBD37E41E98}"
+EndProject
+Global
+    GlobalSection(SolutionConfigurationPlatforms) = preSolution
+        Debug|Any CPU = Debug|Any CPU
+        Release|Any CPU = Release|Any CPU
+        Mono|Any CPU = Mono|Any CPU
+        Il2cpp|Any CPU = Il2cpp|Any CPU
+        CrossCompat|Any CPU = CrossCompat|Any CPU
+    EndGlobalSection
+    GlobalSection(ProjectConfigurationPlatforms) = postSolution
+        {E31E6BC5-65D3-434E-AEF9-7CBD37E41E98}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {E31E6BC5-65D3-434E-AEF9-7CBD37E41E98}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {E31E6BC5-65D3-434E-AEF9-7CBD37E41E98}.Release|Any CPU.ActiveCfg = Release|Any CPU
+        {E31E6BC5-65D3-434E-AEF9-7CBD37E41E98}.Release|Any CPU.Build.0 = Release|Any CPU
+        {E31E6BC5-65D3-434E-AEF9-7CBD37E41E98}.Mono|Any CPU.ActiveCfg = Mono|Any CPU
+        {E31E6BC5-65D3-434E-AEF9-7CBD37E41E98}.Mono|Any CPU.Build.0 = Mono|Any CPU
+        {E31E6BC5-65D3-434E-AEF9-7CBD37E41E98}.Il2cpp|Any CPU.ActiveCfg = Il2cpp|Any CPU
+        {E31E6BC5-65D3-434E-AEF9-7CBD37E41E98}.Il2cpp|Any CPU.Build.0 = Il2cpp|Any CPU
+        {E31E6BC5-65D3-434E-AEF9-7CBD37E41E98}.CrossCompat|Any CPU.ActiveCfg = CrossCompat|Any CPU
+        {E31E6BC5-65D3-434E-AEF9-7CBD37E41E98}.CrossCompat|Any CPU.Build.0 = CrossCompat|Any CPU
+    EndGlobalSection
+    GlobalSection(SolutionProperties) = preSolution
+        HideSolutionNode = FALSE
+    EndGlobalSection
+    GlobalSection(ExtensibilityGlobals) = postSolution
+        SolutionGuid = {2CA9A60D-ED02-4106-AEBA-139A03375E63}
+    EndGlobalSection
+EndGlobal

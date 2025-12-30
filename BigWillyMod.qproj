@@ -1,0 +1,104 @@
+{
+  "projectName": "BigWillyMod",
+  "projectDescription": "Mod project for BigWillyMod",
+  "quests": [],
+  "npcs": [
+    {
+      "className": "BigWilly",
+      "namespace": "BigWillyMod.NPCs",
+      "npcId": "big_willy",
+      "firstName": "Big",
+      "lastName": "Willy",
+      "modName": "BigWillyMod",
+      "modAuthor": "Bars",
+      "modVersion": "1.0.0",
+      "gameDeveloper": "TVGS",
+      "gameName": "Schedule I",
+      "isPhysical": true,
+      "isDealer": false,
+      "enableCustomer": true,
+      "hasSpawnPosition": true,
+      "spawnX": -53.57,
+      "spawnY": 1.065,
+      "spawnZ": 67.8,
+      "appearance": {
+        "faceLayers": [
+          {
+            "path": "Avatar/Layers/Face/Face_SlightSmile",
+            "color": "#FF000000"
+          }
+        ],
+        "bodyLayers": [
+          {
+            "path": "Avatar/Layers/Top/Overalls",
+            "color": "#FF000080"
+          },
+          {
+            "path": "Avatar/Layers/Top/FlannelButtonUp",
+            "color": "#FFDC143C"
+          },
+          {
+            "path": "Avatar/Layers/Top/T-Shirt",
+            "color": "#FF54E7E1"
+          },
+          {
+            "path": "Avatar/Layers/Bottom/CargoPants",
+            "color": "#FF262626"
+          }
+        ],
+        "accessoryLayers": [
+          {
+            "path": "Avatar/Accessories/Head/PorkpieHat/PorkpieHat",
+            "color": "#FFD2B48C"
+          },
+          {
+            "path": "Avatar/Accessories/Feet/CombatBoots/CombatBoots",
+            "color": "#FFD2B48C"
+          },
+          {
+            "path": "Avatar/Accessories/Head/SmallRoundGlasses/SmallRoundGlasses",
+            "color": "#FF000000"
+          }
+        ],
+        "gender": 0.0,
+        "height": 1.0,
+        "weight": 1.0,
+        "skinColor": "#FFDFBDA1",
+        "leftEyeLidColor": "#FFDFBDA1",
+        "rightEyeLidColor": "#FFDFBDA1",
+        "eyeBallTint": "#FFFFA7A7",
+        "hairColor": "#FF1F130B",
+        "hairPath": "Avatar/Hair/bowlcut/BowlCut",
+        "eyeballMaterialId": "Default",
+        "pupilDilation": 1.0,
+        "eyebrowScale": 1.1686,
+        "eyebrowThickness": 1.1113,
+        "eyebrowRestingHeight": 0.0,
+        "eyebrowRestingAngle": 0.0,
+        "leftEye": 0.5,
+        "leftEyeBottom": 0.5,
+        "rightEyeTop": 0.5,
+        "rightEyeBottom": 0.5
+      },
+      "folderId": "root"
+    }
+  ],
+  "resources": [],
+  "folders": [
+    {
+      "id": "root",
+      "name": "Workspace",
+      "parentId": null
+    },
+    {
+      "id": "root",
+      "name": "Workspace",
+      "parentId": null
+    },
+    {
+      "id": "root",
+      "name": "Workspace",
+      "parentId": null
+    }
+  ]
+}
