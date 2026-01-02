@@ -12,8 +12,8 @@ A mod for Schedule One that adds Big Willy NPC and custom items.
 
 ## Installation
 
-1. Build the mod using `dotnet build BigWillyMod/BigWillyMod.csproj -c Release`
-2. Copy the built DLL from `bin/Release/` to your game's `Mods/` folder
+1. Build the mod using `dotnet build BigWillyMod/BigWillyMod.csproj -c CrossCompat`
+2. Copy the built DLL from `bin/CrossCompat/` to your game's `Mods/` folder
 3. Launch the game
 
 ## Custom Assets
@@ -48,8 +48,8 @@ The Stay Silly Cap is automatically added to compatible clothing shops after the
 ## Building
 
 ```bash
-dotnet build BigWillyMod/BigWillyMod.csproj -c Release
+dotnet build BigWillyMod/BigWillyMod.csproj -c CrossCompat
 ```
 
-The output DLL will be in `bin/Release/netstandard2.1/BigWillyMod.dll`
+The output DLL will be in `bin/CrossCompat/netstandard2.1/BigWillyMod.dll`
 
