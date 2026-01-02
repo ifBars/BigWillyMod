@@ -1,4 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+  <Project Sdk="Microsoft.NET.Sdk">
+   <!-- Import local overrides for contributor paths from repository root -->
+   <Import Project="local.build.props" Condition="Exists('local.build.props')" />
+
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -15,180 +18,176 @@
   <PropertyGroup Condition="'$(Configuration)'=='CrossCompat'">
     <DefineConstants>CROSS_COMPAT</DefineConstants>
     <AssemblyName>BigWillyMod</AssemblyName>
-    <!-- Configure these paths to point to your Schedule One Mono installation -->
-    <GamePath Condition="'$(GamePath)'==''">D:\\SteamLibrary\\steamapps\\common\\Schedule I_alternate</GamePath>
-    <ManagedPath Condition="'$(ManagedPath)'==''">$(GamePath)\Schedule I_Data\Managed</ManagedPath>
-    <MelonLoaderPath Condition="'$(MelonLoaderPath)'==''">$(GamePath)\MelonLoader\net35</MelonLoaderPath>
-    <ModsPath Condition="'$(ModsPath)'==''">$(GamePath)\Mods</ModsPath>
+    <!-- Configure these paths in local.build.props or via command line -->
   </PropertyGroup>
 
   <!-- Mono build for base game mono assemblies -->
   <PropertyGroup Condition="'$(Configuration)'=='Mono'">
-    <GamePath Condition="'$(GamePath)'==''">D:\SteamLibrary\steamapps\common\Schedule I_alternate</GamePath>
-    <ManagedPath Condition="'$(ManagedPath)'==''">$(GamePath)\Schedule I_Data\Managed</ManagedPath>
-    <MelonLoaderPath Condition="'$(MelonLoaderPath)'==''">$(GamePath)\MelonLoader\net35</MelonLoaderPath>
-    <ModsPath Condition="'$(ModsPath)'==''">$(GamePath)\Mods</ModsPath>
     <DefineConstants>MONO</DefineConstants>
     <AssemblyName>BigWillyMod_Mono</AssemblyName>
   </PropertyGroup>
 
   <!-- Il2Cpp build for MelonLoader net6 assemblies -->
   <PropertyGroup Condition="'$(Configuration)'=='Il2cpp'">
-    <GamePath Condition="'$(GamePath)'==''">D:\SteamLibrary\steamapps\common\Schedule I_public</GamePath>
-    <ManagedPath Condition="'$(ManagedPath)'==''">$(GamePath)\MelonLoader\Il2CppAssemblies</ManagedPath>
-    <MelonLoaderPath Condition="'$(MelonLoaderPath)'==''">$(GamePath)\MelonLoader\net6</MelonLoaderPath>
-    <ModsPath Condition="'$(ModsPath)'==''">$(GamePath)\Mods</ModsPath>
     <DefineConstants>IL2CPP</DefineConstants>
     <AssemblyName>BigWillyMod_Il2cpp</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Always use Mono S1API build for all configurations -->
-    <Reference Include="S1API">
-      <HintPath>C:\\Users\\ghost\\Desktop\\Coding\\ScheduleOne\\S1API\\S1API\\bin\\MonoMelon\\netstandard2.1\\S1API.dll</HintPath>
+    <PackageReference Include="LavaGang.MelonLoader" Version="0.7.0" />
+  </ItemGroup>
+
+  <!-- S1API.Forked: Use NuGet package when not using local assembly -->
+  <ItemGroup Condition="'$(UseLocalS1APIForked)' != 'true'">
+    <PackageReference Include="S1API.Forked" Version="2.8.9" />
+  </ItemGroup>
+
+  <!-- S1API.Forked: Use local assembly reference when enabled -->
+  <ItemGroup Condition="'$(UseLocalS1APIForked)' == 'true'">
+    <Reference Include="S1API.Forked">
+      <HintPath>$(LocalS1APIForkedPath)</HintPath>
       <Private>false</Private>
     </Reference>
-    <PackageReference Include="LavaGang.MelonLoader" Version="0.7.0" />
   </ItemGroup>
 
   <!-- CrossCompat Unity references (Mono without Assembly-CSharp) -->
   <ItemGroup Condition="'$(Configuration)'=='CrossCompat'">
     <Reference Include="Newtonsoft.Json">
-      <HintPath>$(ManagedPath)\Newtonsoft.Json.dll</HintPath>
+      <HintPath>$(MonoAssembliesPath)\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro">
-      <HintPath>$(ManagedPath)\Unity.TextMeshPro.dll</HintPath>
+      <HintPath>$(MonoAssembliesPath)\Unity.TextMeshPro.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AssetBundleModule">
-      <HintPath>$(ManagedPath)\UnityEngine.AssetBundleModule.dll</HintPath>
+      <HintPath>$(MonoAssembliesPath)\UnityEngine.AssetBundleModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>$(ManagedPath)\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>$(MonoAssembliesPath)\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>$(ManagedPath)\UnityEngine.dll</HintPath>
+      <HintPath>$(MonoAssembliesPath)\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.JSONSerializeModule">
-      <HintPath>$(ManagedPath)\UnityEngine.JSONSerializeModule.dll</HintPath>
+      <HintPath>$(MonoAssembliesPath)\UnityEngine.JSONSerializeModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.TextRenderingModule">
-      <HintPath>$(ManagedPath)\UnityEngine.TextRenderingModule.dll</HintPath>
+      <HintPath>$(MonoAssembliesPath)\UnityEngine.TextRenderingModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
-      <HintPath>$(ManagedPath)\UnityEngine.UI.dll</HintPath>
+      <HintPath>$(MonoAssembliesPath)\UnityEngine.UI.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UIElementsModule">
-      <HintPath>$(ManagedPath)\UnityEngine.UIElementsModule.dll</HintPath>
+      <HintPath>$(MonoAssembliesPath)\UnityEngine.UIElementsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UIModule">
-      <HintPath>$(ManagedPath)\UnityEngine.UIModule.dll</HintPath>
+      <HintPath>$(MonoAssembliesPath)\UnityEngine.UIModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ImageConversionModule">
-      <HintPath>$(ManagedPath)\UnityEngine.ImageConversionModule.dll</HintPath>
+      <HintPath>$(MonoAssembliesPath)\UnityEngine.ImageConversionModule.dll</HintPath>
     </Reference>
     <Reference Include="MelonLoader">
-      <HintPath>$(MelonLoaderPath)\MelonLoader.dll</HintPath>
+      <HintPath>$(LocalMonoDeploymentPath)\MelonLoader\net35\MelonLoader.dll</HintPath>
     </Reference>
     <Reference Include="0Harmony">
-      <HintPath>$(MelonLoaderPath)\0Harmony.dll</HintPath>
+      <HintPath>$(LocalMonoDeploymentPath)\MelonLoader\net35\0Harmony.dll</HintPath>
     </Reference>
   </ItemGroup>
 
   <!-- Mono Unity references -->
   <ItemGroup Condition="'$(Configuration)'=='Mono'">
     <Reference Include="Newtonsoft.Json">
-      <HintPath>$(ManagedPath)\Newtonsoft.Json.dll</HintPath>
+      <HintPath>$(MonoAssembliesPath)\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro">
-      <HintPath>$(ManagedPath)\Unity.TextMeshPro.dll</HintPath>
+      <HintPath>$(MonoAssembliesPath)\Unity.TextMeshPro.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AssetBundleModule">
-      <HintPath>$(ManagedPath)\UnityEngine.AssetBundleModule.dll</HintPath>
+      <HintPath>$(MonoAssembliesPath)\UnityEngine.AssetBundleModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>$(ManagedPath)\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>$(MonoAssembliesPath)\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>$(ManagedPath)\UnityEngine.dll</HintPath>
+      <HintPath>$(MonoAssembliesPath)\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.JSONSerializeModule">
-      <HintPath>$(ManagedPath)\UnityEngine.JSONSerializeModule.dll</HintPath>
+      <HintPath>$(MonoAssembliesPath)\UnityEngine.JSONSerializeModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.TextRenderingModule">
-      <HintPath>$(ManagedPath)\UnityEngine.TextRenderingModule.dll</HintPath>
+      <HintPath>$(MonoAssembliesPath)\UnityEngine.TextRenderingModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
-      <HintPath>$(ManagedPath)\UnityEngine.UI.dll</HintPath>
+      <HintPath>$(MonoAssembliesPath)\UnityEngine.UI.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UIElementsModule">
-      <HintPath>$(ManagedPath)\UnityEngine.UIElementsModule.dll</HintPath>
+      <HintPath>$(MonoAssembliesPath)\UnityEngine.UIElementsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UIModule">
-      <HintPath>$(ManagedPath)\UnityEngine.UIModule.dll</HintPath>
+      <HintPath>$(MonoAssembliesPath)\UnityEngine.UIModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ImageConversionModule">
-      <HintPath>$(ManagedPath)\UnityEngine.ImageConversionModule.dll</HintPath>
+      <HintPath>$(MonoAssembliesPath)\UnityEngine.ImageConversionModule.dll</HintPath>
     </Reference>
     <Reference Include="MelonLoader">
-      <HintPath>$(MelonLoaderPath)\MelonLoader.dll</HintPath>
+      <HintPath>$(MelonLoaderAssembliesPath)\MelonLoader.dll</HintPath>
     </Reference>
     <Reference Include="0Harmony">
-      <HintPath>$(MelonLoaderPath)\0Harmony.dll</HintPath>
+      <HintPath>$(MelonLoaderAssembliesPath)\0Harmony.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp">
-      <HintPath>$(ManagedPath)\Assembly-CSharp.dll</HintPath>
+      <HintPath>$(MonoAssembliesPath)\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>$(ManagedPath)\Assembly-CSharp-firstpass.dll</HintPath>
+      <HintPath>$(MonoAssembliesPath)\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
   </ItemGroup>
 
   <!-- Il2Cpp Unity references -->
   <ItemGroup Condition="'$(Configuration)'=='Il2cpp'">
     <Reference Include="Newtonsoft.Json">
-      <HintPath>$(ManagedPath)\Newtonsoft.Json.dll</HintPath>
+      <HintPath>$(Il2CppAssembliesPath)\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro">
-      <HintPath>$(ManagedPath)\Unity.TextMeshPro.dll</HintPath>
+      <HintPath>$(Il2CppAssembliesPath)\Unity.TextMeshPro.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AssetBundleModule">
-      <HintPath>$(ManagedPath)\UnityEngine.AssetBundleModule.dll</HintPath>
+      <HintPath>$(Il2CppAssembliesPath)\UnityEngine.AssetBundleModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>$(ManagedPath)\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>$(Il2CppAssembliesPath)\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>$(ManagedPath)\UnityEngine.dll</HintPath>
+      <HintPath>$(Il2CppAssembliesPath)\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.JSONSerializeModule">
-      <HintPath>$(ManagedPath)\UnityEngine.JSONSerializeModule.dll</HintPath>
+      <HintPath>$(Il2CppAssembliesPath)\UnityEngine.JSONSerializeModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.TextRenderingModule">
-      <HintPath>$(ManagedPath)\UnityEngine.TextRenderingModule.dll</HintPath>
+      <HintPath>$(Il2CppAssembliesPath)\UnityEngine.TextRenderingModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
-      <HintPath>$(ManagedPath)\UnityEngine.UI.dll</HintPath>
+      <HintPath>$(Il2CppAssembliesPath)\UnityEngine.UI.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UIElementsModule">
-      <HintPath>$(ManagedPath)\UnityEngine.UIElementsModule.dll</HintPath>
+      <HintPath>$(Il2CppAssembliesPath)\UnityEngine.UIElementsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UIModule">
-      <HintPath>$(ManagedPath)\UnityEngine.UIModule.dll</HintPath>
+      <HintPath>$(Il2CppAssembliesPath)\UnityEngine.UIModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ImageConversionModule">
-      <HintPath>$(ManagedPath)\UnityEngine.ImageConversionModule.dll</HintPath>
+      <HintPath>$(Il2CppAssembliesPath)\UnityEngine.ImageConversionModule.dll</HintPath>
     </Reference>
     <Reference Include="MelonLoader">
-      <HintPath>$(MelonLoaderPath)\MelonLoader.dll</HintPath>
+      <HintPath>$(MelonLoaderAssembliesPath)\MelonLoader.dll</HintPath>
     </Reference>
     <Reference Include="0Harmony">
-      <HintPath>$(MelonLoaderPath)\0Harmony.dll</HintPath>
+      <HintPath>$(MelonLoaderAssembliesPath)\0Harmony.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp">
-      <HintPath>$(ManagedPath)\Assembly-CSharp.dll</HintPath>
+      <HintPath>$(Il2CppAssembliesPath)\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>$(ManagedPath)\Assembly-CSharp-firstpass.dll</HintPath>
+      <HintPath>$(Il2CppAssembliesPath)\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
   </ItemGroup>
 
@@ -198,6 +197,7 @@
     <Compile Include="Quests\*.cs" />
     <Compile Include="NPCs\*.cs" />
     <Compile Include="Items\*.cs" />
+    <Compile Include="Services\*.cs" />
   </ItemGroup>
   
   <ItemGroup>
@@ -205,11 +205,21 @@
     <EmbeddedResource Include="Resources\**\*.jpg" />
   </ItemGroup>
 
-  <Target Name="CopyModToGameModsFolder" AfterTargets="Build"
-          Condition=" '$(ModsPath)' != '' and Exists('$(ModsPath)') ">
-    <Copy SourceFiles="$(TargetDir)$(AssemblyName).dll"
-          DestinationFolder="$(ModsPath)"
-          SkipUnchangedFiles="true" />
-    <Message Text="Copied $(AssemblyName).dll to $(ModsPath)" Importance="High" />
+  <!-- Auto-deploy to game Mods folder for Mono builds -->
+  <Target Name="PostBuildMono" AfterTargets="Build" Condition="'$(Configuration)'=='Mono' AND '$(LocalMonoDeploymentPath)'!=''">
+    <Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(LocalMonoDeploymentPath)\Mods\" SkipUnchangedFiles="true" />
+    <Message Text="Copied $(AssemblyName).dll to $(LocalMonoDeploymentPath)\Mods\" Importance="High" />
+  </Target>
+
+  <!-- Auto-deploy to game Mods folder for Il2Cpp builds -->
+  <Target Name="PostBuildIl2Cpp" AfterTargets="Build" Condition="'$(Configuration)'=='Il2cpp' AND '$(LocalIl2CppDeploymentPath)'!=''">
+    <Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(LocalIl2CppDeploymentPath)\Mods\" SkipUnchangedFiles="true" />
+    <Message Text="Copied $(AssemblyName).dll to $(LocalIl2CppDeploymentPath)\Mods\" Importance="High" />
+  </Target>
+
+  <!-- Auto-deploy to game Mods folder for CrossCompat builds -->
+  <Target Name="PostBuildCrossCompat" AfterTargets="Build" Condition="'$(Configuration)'=='CrossCompat' AND '$(LocalMonoDeploymentPath)'!=''">
+    <Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(LocalMonoDeploymentPath)\Mods\" SkipUnchangedFiles="true" />
+    <Message Text="Copied $(AssemblyName).dll to $(LocalMonoDeploymentPath)\Mods\" Importance="High" />
   </Target>
 </Project>

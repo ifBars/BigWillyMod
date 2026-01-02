@@ -22,5 +22,14 @@ namespace BigWillyMod.Utils
             public const string GAME_STUDIO = "TVGS";
             public const string GAME_NAME = "Schedule I";
         }
+
+        /// <summary>
+        /// Live stream notification constants
+        /// </summary>
+        public static class LiveStream
+        {
+            public const string TWITCH_URL = "https://www.twitch.tv/itsbigwilly_";
+            public const string CHECK_URL = "https://decapi.me/twitch/uptime/itsbigwilly_";
+        }
     }
 }
