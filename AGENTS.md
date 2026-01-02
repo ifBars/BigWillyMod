@@ -8,8 +8,9 @@
 - Build outputs go to `bin/<Configuration>/netstandard2.1/`; avoid editing `bin/` or `obj/` by hand.
 
 ## Build, Test, and Development Commands
-- Configure game paths when needed: `dotnet build BigWillyMod.csproj -c CrossCompat /p:GamePath=\"D:\\\\SteamLibrary\\\\...\" /p:ManagedPath=\"$(GamePath)\\Schedule I_Data\\Managed\" /p:MelonLoaderPath=\"$(GamePath)\\MelonLoader\\net35\"`.
-- Fast rebuild: `dotnet build BigWillyMod.csproj -c CrossCompat` (uses defaults from the project file).
+- For contributors, copy `local.build.props.example` to `local.build.props` and set your S1API and game paths there. The file is gitignored.
+- Alternatively, configure game paths inline: `dotnet build BigWillyMod.csproj -c CrossCompat /p:GamePath=\"D:\\\\SteamLibrary\\\\...\" /p:ManagedPath=\"$(GamePath)\\Schedule I_Data\\Managed\" /p:MelonLoaderPath=\"$(GamePath)\\MelonLoader\\net35\" /p:S1ApiPath=\"C:\\\\Users\\\\ghost\\\\Desktop\\\\Coding\\\\ScheduleOne\\\\S1API\\\\S1API\\\\bin\\\\MonoMelon\\\\netstandard2.1\"`.
+- Fast rebuild: `dotnet build BigWillyMod.csproj -c CrossCompat` (uses defaults from the project file or local.build.props).
 - Clean artifacts: `dotnet clean BigWillyMod.csproj`.
 - To try the mod, copy `bin/CrossCompat/netstandard2.1/BigWillyMod.dll` into the game’s `Mods/` folder and launch Schedule I with MelonLoader.
 

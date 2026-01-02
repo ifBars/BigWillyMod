@@ -1,0 +1,37 @@
+<!-- This file should be placed at the repository root as local.build.props -->
+<!-- Copy this template to ../local.build.props (repository root) and adjust paths -->
+<!-- DO NOT commit local.build.props to the repository -->
+
+<Project>
+  <PropertyGroup>
+    <!-- General Configuration -->
+
+    <!-- Used when building both Il2Cpp and Mono. Typically located at `steamapps/Schedule I/MelonLoader/net6` -->
+    <!-- <MelonLoaderAssembliesPath>D:\SteamLibrary\steamapps\common\Schedule I_alternate\MelonLoader\net6</MelonLoaderAssembliesPath> -->
+
+    <!-- Mono Configuration -->
+
+    <!-- Used only when building against Mono. Typically located at `steamapps/Schedule I` -->
+    <!-- <LocalMonoDeploymentPath>D:\SteamLibrary\steamapps\common\Schedule I_alternate</LocalMonoDeploymentPath> -->
+
+    <!-- Used only when building against Mono. Typically located at `steamapps/Schedule I/Schedule I_Data/Managed` -->
+    <!-- <MonoAssembliesPath>D:\SteamLibrary\steamapps\common\Schedule I_alternate\Schedule I_Data\Managed</MonoAssembliesPath> -->
+
+    <!-- Il2Cpp Configuration -->
+
+    <!-- Used only when building against Il2Cpp. Typically located at `steamapps/Schedule I` -->
+    <!-- <LocalIl2CppDeploymentPath>D:\SteamLibrary\steamapps\common\Schedule I_public</LocalIl2CppDeploymentPath> -->
+
+    <!-- Used only when building against Il2Cpp. Typically located at `steamapps/Schedule I/MelonLoader/Il2CppAssemblies` -->
+    <!-- <Il2CppAssembliesPath>D:\SteamLibrary\steamapps\common\Schedule I_public\MelonLoader\Il2CppAssemblies</Il2CppAssembliesPath> -->
+
+    <!-- S1API.Forked Configuration -->
+
+    <!-- Set to 'true' to use a local assembly reference instead of the NuGet package -->
+    <!-- <UseLocalS1APIForked>true</UseLocalS1APIForked> -->
+
+    <!-- Path to local S1API.Forked assembly (only used when UseLocalS1APIForked is 'true') -->
+    <!-- Example: C:\Path\To\S1API.dll -->
+    <!-- <LocalS1APIForkedPath>C:\Users\ghost\Desktop\Coding\ScheduleOne\S1API\S1API\bin\MonoMelon\netstandard2.1\S1API.dll</LocalS1APIForkedPath> -->
+  </PropertyGroup>
+</Project>
