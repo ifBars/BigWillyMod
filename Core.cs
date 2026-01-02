@@ -9,6 +9,7 @@ using S1API.GameTime;
 using S1API.Lifecycle;
 using BigWillyMod.Items;
 using BigWillyMod.Quests;
+using BigWillyMod.Services;
 using BigWillyMod.Utils;
 
 [assembly: MelonInfo(typeof(BigWillyMod.Core), Constants.MOD_NAME, Constants.MOD_VERSION, Constants.MOD_AUTHOR)]
@@ -25,11 +26,23 @@ namespace BigWillyMod
 
         private static MelonPreferences_Category? _preferencesCategory;
         private static MelonPreferences_Entry<bool>? _debugLogsEntry;
+        private static MelonPreferences_Entry<bool>? _liveNotificationsEntry;
+        private static MelonPreferences_Entry<int>? _liveCheckIntervalEntry;
 
         /// <summary>
         /// Whether debug logs should be shown in the console.
         /// </summary>
         public static bool DebugLogsEnabled => _debugLogsEntry?.Value ?? false;
+
+        /// <summary>
+        /// Whether live stream notifications are enabled.
+        /// </summary>
+        public static bool LiveNotificationsEnabled => _liveNotificationsEntry?.Value ?? true;
+
+        /// <summary>
+        /// Interval in minutes between live stream checks.
+        /// </summary>
+        public static int LiveCheckIntervalMinutes => _liveCheckIntervalEntry?.Value ?? 10;
 
         public override void OnLateInitializeMelon()
         {
@@ -38,6 +51,8 @@ namespace BigWillyMod
             // Initialize preferences
             _preferencesCategory = MelonPreferences.CreateCategory("BigWillyMod");
             _debugLogsEntry = _preferencesCategory.CreateEntry("DebugLogs", false, "Enable Debug Logs", "Show detailed debug messages in the console");
+            _liveNotificationsEntry = _preferencesCategory.CreateEntry("LiveNotifications", true, "Live Stream Notifications", "Send in-game text when Big Willy goes live on Twitch");
+            _liveCheckIntervalEntry = _preferencesCategory.CreateEntry("LiveCheckInterval", 10, "Live Check Interval (minutes)", "How often to check if Big Willy is streaming");
             _preferencesCategory.SaveToFile(false);
             
             // Initialize Harmony patches for graffiti tracking
@@ -51,9 +66,12 @@ namespace BigWillyMod
 
         public override void OnApplicationQuit()
         {
+            // Stop live stream polling
+            LiveStreamChecker.StopPolling();
+
             // Cleanup Harmony patches
             GraffitiQuestTracker.Cleanup();
-            
+
             Instance = null;
         }
 
@@ -66,9 +84,16 @@ namespace BigWillyMod
                 {
                     // MelonCoroutines.Start(AddToShopsDelayed());
                 }
+
+                // Start live stream polling
+                LiveStreamChecker.StartPolling();
             }
             else if (sceneName == "Menu")
             {
+                // Stop live stream polling and reset state
+                LiveStreamChecker.StopPolling();
+                LiveStreamChecker.Reset();
+
                 // Reset initialization flags when returning to menu
                 _itemsInitialized = false;
                 _shopsInitialized = false;

@@ -16,7 +16,7 @@
     <DefineConstants>CROSS_COMPAT</DefineConstants>
     <AssemblyName>BigWillyMod</AssemblyName>
     <!-- Configure these paths to point to your Schedule One Mono installation -->
-    <GamePath Condition="'$(GamePath)'==''">D:\\SteamLibrary\\steamapps\\common\\Schedule I_alternate</GamePath>
+    <GamePath Condition="'$(GamePath)'==''">C:\Projects\s1\branches\v0.4.2f9\Alternate Mono</GamePath>
     <ManagedPath Condition="'$(ManagedPath)'==''">$(GamePath)\Schedule I_Data\Managed</ManagedPath>
     <MelonLoaderPath Condition="'$(MelonLoaderPath)'==''">$(GamePath)\MelonLoader\net35</MelonLoaderPath>
     <ModsPath Condition="'$(ModsPath)'==''">$(GamePath)\Mods</ModsPath>
@@ -24,7 +24,7 @@
 
   <!-- Mono build for base game mono assemblies -->
   <PropertyGroup Condition="'$(Configuration)'=='Mono'">
-    <GamePath Condition="'$(GamePath)'==''">D:\SteamLibrary\steamapps\common\Schedule I_alternate</GamePath>
+    <GamePath Condition="'$(GamePath)'==''">C:\Projects\s1\branches\v0.4.2f9\Alternate Mono</GamePath>
     <ManagedPath Condition="'$(ManagedPath)'==''">$(GamePath)\Schedule I_Data\Managed</ManagedPath>
     <MelonLoaderPath Condition="'$(MelonLoaderPath)'==''">$(GamePath)\MelonLoader\net35</MelonLoaderPath>
     <ModsPath Condition="'$(ModsPath)'==''">$(GamePath)\Mods</ModsPath>
@@ -34,7 +34,7 @@
 
   <!-- Il2Cpp build for MelonLoader net6 assemblies -->
   <PropertyGroup Condition="'$(Configuration)'=='Il2cpp'">
-    <GamePath Condition="'$(GamePath)'==''">D:\SteamLibrary\steamapps\common\Schedule I_public</GamePath>
+    <GamePath Condition="'$(GamePath)'==''">C:\Projects\s1\branches\v0.4.2f9\Main ll2Cpp</GamePath>
     <ManagedPath Condition="'$(ManagedPath)'==''">$(GamePath)\MelonLoader\Il2CppAssemblies</ManagedPath>
     <MelonLoaderPath Condition="'$(MelonLoaderPath)'==''">$(GamePath)\MelonLoader\net6</MelonLoaderPath>
     <ModsPath Condition="'$(ModsPath)'==''">$(GamePath)\Mods</ModsPath>
@@ -45,7 +45,7 @@
   <ItemGroup>
     <!-- Always use Mono S1API build for all configurations -->
     <Reference Include="S1API">
-      <HintPath>C:\\Users\\ghost\\Desktop\\Coding\\ScheduleOne\\S1API\\S1API\\bin\\MonoMelon\\netstandard2.1\\S1API.dll</HintPath>
+      <HintPath>C:\\Projects\\s1\\S1API\\S1API\\bin\\MonoMelon\\netstandard2.1\\S1API.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <PackageReference Include="LavaGang.MelonLoader" Version="0.7.0" />
@@ -198,6 +198,7 @@
     <Compile Include="Quests\*.cs" />
     <Compile Include="NPCs\*.cs" />
     <Compile Include="Items\*.cs" />
+    <Compile Include="Services\*.cs" />
   </ItemGroup>
   
   <ItemGroup>
