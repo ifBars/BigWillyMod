@@ -63,7 +63,7 @@ namespace BigWillyMod.Quests
                 
                 quest.RegisterTag(surfaceGuid);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 MelonLogger.Error($"[GraffitiQuestTracker] Error in OnGraffitiCompleted: {ex.Message}");
                 MelonLogger.Error($"[GraffitiQuestTracker] StackTrace: {ex.StackTrace}");

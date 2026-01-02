@@ -61,7 +61,7 @@ namespace BigWillyMod.Items
 
                 _initialized = true;
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 MelonLogger.Error($"[StaySillyCap] Initialization failed: {ex.Message}");
                 MelonLogger.Error(ex.StackTrace);
@@ -91,7 +91,7 @@ namespace BigWillyMod.Items
 
                 int shopsAdded = ShopManager.AddToCompatibleShops(item);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 MelonLogger.Error($"[StaySillyCap] Failed to add to shops: {ex.Message}");
             }
@@ -134,7 +134,7 @@ namespace BigWillyMod.Items
 
                 return success;
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 MelonLogger.Error($"[StaySillyCap] Failed to create accessory: {ex.Message}");
                 MelonLogger.Error(ex.StackTrace);
@@ -193,7 +193,7 @@ namespace BigWillyMod.Items
                 
                 return true;
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 MelonLogger.Error($"[StaySillyCap] Failed to create clothing item: {ex.Message}");
                 MelonLogger.Error(ex.StackTrace);

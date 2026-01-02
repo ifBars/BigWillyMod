@@ -18,7 +18,6 @@ namespace BigWillyMod.Quests
 {
     public class BigWillyGraffitiQuest : Quest
     {
-        private const int REQUIRED_TAG_COUNT = 5;
         private const string QUEST_ID = "big_willy_graffiti_quest";
         
         [SaveableField("taggedSurfaces")]
@@ -27,15 +26,40 @@ namespace BigWillyMod.Quests
         [SaveableField("rewardGranted")]
         private bool _rewardGranted = false;
         
+        [SaveableField("requiredTagCount")]
+        private int _requiredTagCount = 5;
+        
         private QuestEntry _tagEntry;
         private QuestEntry _returnEntry;
+        
+        /// <summary>
+        /// Sets the required number of tags for this quest.
+        /// Must be called before the quest is started.
+        /// </summary>
+        public void SetRequiredTagCount(int count)
+        {
+            if (count <= 0)
+            {
+                MelonLogger.Warning("[BigWillyGraffitiQuest] Required tag count must be greater than 0, using 1");
+                _requiredTagCount = 1;
+            }
+            else
+            {
+                _requiredTagCount = count;
+            }
+        }
+        
+        /// <summary>
+        /// Gets the required number of tags for this quest.
+        /// </summary>
+        public int RequiredTagCount => _requiredTagCount;
 
         protected override string Title => "Spread the Word";
         
         protected override string Description => 
-            "Big Willy needs your help spreading the word about his business! " +
-            "Tag 5 different spots around town with graffiti to help promote Big Willy's enterprise. " +
-            "Once you've completed all 5 tags, return to Big Willy to claim your reward.";
+            $"Big Willy needs your help spreading the word about his business! " +
+            $"Tag {_requiredTagCount} {(_requiredTagCount == 1 ? "spot" : "different spots")} around town with graffiti to help promote Big Willy's enterprise. " +
+            $"Once you've completed all {_requiredTagCount} {(_requiredTagCount == 1 ? "tag" : "tags")}, return to Big Willy to claim your reward.";
         
         protected override bool AutoBegin => false;
 
@@ -52,8 +76,8 @@ namespace BigWillyMod.Quests
             // Only create entries if they haven't been created yet (avoids duplicates for loaded quests)
             if (QuestEntries.Count == 0)
             {
-                // Entry 1: Tag 5 spots for Big Willy
-                _tagEntry = AddEntry($"Tag 5 spots for Big Willy ({_taggedSurfaceIds.Count}/{REQUIRED_TAG_COUNT})");
+                // Entry 1: Tag spots for Big Willy
+                _tagEntry = AddEntry($"Tag {_requiredTagCount} {(_requiredTagCount == 1 ? "spot" : "spots")} for Big Willy ({_taggedSurfaceIds.Count}/{_requiredTagCount})");
                 _tagEntry.Begin();
                 
                 // Update POI to nearest untagged surface (wait a frame for GraffitiManager to initialize)
@@ -93,7 +117,7 @@ namespace BigWillyMod.Quests
                 
                 // After save system restores states, check if we need to update entry states based on progress
                 // This handles cases where quest was loaded with progress already made
-                if (_taggedSurfaceIds.Count >= REQUIRED_TAG_COUNT)
+                if (_taggedSurfaceIds.Count >= _requiredTagCount)
                 {
                     // Mark tag entry as complete if all tags are done
                     if (_tagEntry != null && _tagEntry.State != QuestState.Completed)
@@ -123,7 +147,7 @@ namespace BigWillyMod.Quests
             }
             
             // Request game save to persist completion state
-            Saveable.RequestGameSave();
+            RequestGameSave();
         }
 
         /// <summary>
@@ -141,8 +165,8 @@ namespace BigWillyMod.Quests
             // This ensures loaded quests have their entries created before OnCreated() runs
             if (QuestEntries.Count == 0)
             {
-                // Entry 1: Tag 5 spots for Big Willy
-                _tagEntry = AddEntry($"Tag 5 spots for Big Willy ({_taggedSurfaceIds.Count}/{REQUIRED_TAG_COUNT})");
+                // Entry 1: Tag spots for Big Willy
+                _tagEntry = AddEntry($"Tag {_requiredTagCount} {(_requiredTagCount == 1 ? "spot" : "spots")} for Big Willy ({_taggedSurfaceIds.Count}/{_requiredTagCount})");
                 // State will be restored from save data by S1API
 
                 // Entry 2: Return to Big Willy
@@ -183,7 +207,7 @@ namespace BigWillyMod.Quests
             
             _taggedSurfaceIds.Add(surfaceGuid);
             UpdateTagEntryText();
-            Saveable.RequestGameSave();
+            RequestGameSave();
             SendProgressTextMessage();
             
             // Update POI to nearest untagged surface after tagging
@@ -192,7 +216,7 @@ namespace BigWillyMod.Quests
                 UpdatePOIToNearestUntaggedSurface();
             }
             
-            if (_taggedSurfaceIds.Count >= REQUIRED_TAG_COUNT)
+            if (_taggedSurfaceIds.Count >= _requiredTagCount)
             {
                 if (_tagEntry != null && _tagEntry.State != QuestState.Completed)
                 {
@@ -202,18 +226,11 @@ namespace BigWillyMod.Quests
                 {
                     MelonLogger.Warning("[BigWillyGraffitiQuest] _tagEntry is null, cannot complete");
                 }
-                
-                if (_returnEntry != null)
-                {
-                    _returnEntry.SetState(QuestState.Active);
-                    _returnEntry.Begin();
-                }
-                else
-                {
-                    MelonLogger.Warning("[BigWillyGraffitiQuest] _returnEntry is null, cannot activate");
-                }
-                
-                Saveable.RequestGameSave();
+
+                _returnEntry.SetState(QuestState.Active);
+                _returnEntry.Begin();
+
+                RequestGameSave();
             }
         }
 
@@ -221,7 +238,7 @@ namespace BigWillyMod.Quests
         {
             if (_tagEntry != null)
             {
-                _tagEntry.Title = $"Tag 5 spots for Big Willy ({_taggedSurfaceIds.Count}/{REQUIRED_TAG_COUNT})";
+                _tagEntry.Title = $"Tag {_requiredTagCount} {(_requiredTagCount == 1 ? "spot" : "spots")} for Big Willy ({_taggedSurfaceIds.Count}/{_requiredTagCount})";
             }
         }
 
@@ -235,7 +252,7 @@ namespace BigWillyMod.Quests
             
             try
             {
-                BigWillyMod.Items.StaySillyCapCreator.Initialize();
+                Items.StaySillyCapCreator.Initialize();
                 
                 var capItem = ItemManager.GetItemDefinition("stay_silly_cap");
                 if (capItem == null)
@@ -247,7 +264,7 @@ namespace BigWillyMod.Quests
                 ConsoleHelper.AddItemToInventory("stay_silly_cap", 1);
                 _rewardGranted = true;
                 
-                Saveable.RequestGameSave();
+                RequestGameSave();
             }
             catch (Exception ex)
             {
@@ -268,13 +285,13 @@ namespace BigWillyMod.Quests
                 }
                 
                 string message;
-                if (_taggedSurfaceIds.Count >= REQUIRED_TAG_COUNT)
+                if (_taggedSurfaceIds.Count >= _requiredTagCount)
                 {
-                    message = "Brother! You've tagged all 5 spots! Come see me and I'll give you something special!";
+                    message = $"Brother! You've tagged all {_requiredTagCount} {(_requiredTagCount == 1 ? "spot" : "spots")}! Come see me and I'll give you something special!";
                 }
                 else
                 {
-                    int remaining = REQUIRED_TAG_COUNT - _taggedSurfaceIds.Count;
+                    int remaining = _requiredTagCount - _taggedSurfaceIds.Count;
                     message = $"Nice work brother! You've tagged {_taggedSurfaceIds.Count} spot{(_taggedSurfaceIds.Count == 1 ? "" : "s")}. Just {remaining} more to go!";
                 }
                 
@@ -400,7 +417,7 @@ namespace BigWillyMod.Quests
 
         public int TaggedCount => _taggedSurfaceIds.Count;
         
-        public bool IsReadyToTurnIn => _taggedSurfaceIds.Count >= REQUIRED_TAG_COUNT;
+        public bool IsReadyToTurnIn => _taggedSurfaceIds.Count >= _requiredTagCount;
         
         /// <summary>
         /// Gets the current quest state. Public accessor for the protected QuestState property.

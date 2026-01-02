@@ -11,15 +11,12 @@ namespace BigWillyMod.Quests
 
         public static BigWillyGraffitiQuest? GetBigWillyGraffitiQuest()
         {
-            // Try to get from cache first
             if (_cachedQuest != null)
             {
-                // Verify it's still valid by checking QuestManager
                 if (QuestManagerQuests.Contains(_cachedQuest))
                 {
                     return _cachedQuest;
                 }
-                // Cache is stale, clear it
                 _cachedQuest = null;
             }
 
@@ -40,21 +37,18 @@ namespace BigWillyMod.Quests
                     return quest;
                 }
             }
-
-            // Quest doesn't exist yet
+            
             return null;
         }
 
         public static BigWillyGraffitiQuest CreateBigWillyGraffitiQuest()
         {
-            // Check if it already exists
             var existing = GetBigWillyGraffitiQuest();
             if (existing != null)
             {
                 return existing;
             }
-
-            // Create new quest instance (without GUID, following StarredNoteQuest pattern)
+            
             var quest = QuestManager.CreateQuest<BigWillyGraffitiQuest>();
             if (quest is BigWillyGraffitiQuest bigWillyQuest)
             {

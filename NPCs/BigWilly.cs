@@ -19,6 +19,7 @@ using S1API.Saveables;
 using BigWillyMod.Quests;
 using MelonLoader;
 using UnityEngine;
+using S1API.Graffiti;
 
 namespace BigWillyMod.NPCs
 {
@@ -179,9 +180,21 @@ namespace BigWillyMod.NPCs
                             }
                             else if (currentQuest == null || currentQuest.QuestState == QuestState.Inactive)
                             {
-                                // Quest not started - offer quest
-                                ch.Add("ACCEPT_HELP", "Yeah, I'll spread the word", "QUEST_ACCEPTED")
-                                  .Add("DECLINE", "Not right now", "DECLINE_RESPONSE");
+                                // Quest not started - offer quest or alternative reward based on available spots
+                                int availableSpots = GraffitiManager.UntaggedSpraySurfaces.Count;
+                                
+                                if (availableSpots == 0)
+                                {
+                                    // No spots available - offer hat directly
+                                    ch.Add("ACCEPT_HAT", "Sure, I'll take the hat!", "GIVE_HAT_DIRECTLY")
+                                      .Add("DECLINE", "Not right now", "DECLINE_RESPONSE");
+                                }
+                                else
+                                {
+                                    // Spots available - offer quest
+                                    ch.Add("ACCEPT_HELP", $"Yeah, I'll spread the word", "QUEST_ACCEPTED")
+                                      .Add("DECLINE", "Not right now", "DECLINE_RESPONSE");
+                                }
                             }
                             else if (currentQuest.QuestState == QuestState.Completed)
                             {
@@ -195,7 +208,7 @@ namespace BigWillyMod.NPCs
                                 if (currentQuest.IsReadyToTurnIn)
                                 {
                                     // Ready to turn in
-                                    ch.Add("TURN_IN", "I've tagged 5 spots!", "TURN_IN_REWARD");
+                                    ch.Add("TURN_IN", $"I've tagged {currentQuest.RequiredTagCount} {(currentQuest.RequiredTagCount == 1 ? "spot" : "spots")}!", "TURN_IN_REWARD");
                                 }
                                 else
                                 {
@@ -212,16 +225,22 @@ namespace BigWillyMod.NPCs
                         });
                         
                         // Quest accepted
-                        c.AddNode("QUEST_ACCEPTED", "Great! Tag 5 spots with graffiti for Big Willy. I'll know when you're done!", ch =>
+                        c.AddNode("QUEST_ACCEPTED", GetQuestAcceptedText(), ch =>
                         {
                             ch.Add("GOT_IT", "Got it!", "EXIT");
+                        });
+                        
+                        // Give hat directly (when no graffiti spots available)
+                        c.AddNode("GIVE_HAT_DIRECTLY", "Stay silly, brother!", ch =>
+                        {
+                            ch.Add("THANKS", "Thanks!", "EXIT");
                         });
                         
                         // Decline response
                         c.AddNode("DECLINE_RESPONSE", "Alright, let me know if you change your mind!");
                         
                         // Progress update
-                        c.AddNode("PROGRESS_UPDATE", $"Keep it up brother, you've tagged {QuestRegistry.GetBigWillyGraffitiQuest()?.TaggedCount ?? 0} spots. Just a few more to go!");
+                        c.AddNode("PROGRESS_UPDATE", GetProgressUpdateText());
                         
                         // Leave response
                         c.AddNode("LEAVE_RESPONSE", "Thanks for helping spread the word!");
@@ -241,16 +260,57 @@ namespace BigWillyMod.NPCs
                     {
                         try
                         {
+                            int availableSpots = GraffitiManager.UntaggedSpraySurfaces.Count;
+                            
+                            // Create quest with adjusted requirement based on available spots
                             var currentQuest = QuestRegistry.CreateBigWillyGraffitiQuest();
-                            if (currentQuest != null && currentQuest.QuestState != QuestState.Active)
+                            if (currentQuest != null)
                             {
-                                currentQuest.Begin();
+                                // Set the required count based on available spots (min 1, max 5)
+                                int requiredCount = Math.Min(Math.Max(availableSpots, 1), 5);
+                                currentQuest.SetRequiredTagCount(requiredCount);
+                                
+                                if (currentQuest.QuestState != QuestState.Active)
+                                {
+                                    currentQuest.Begin();
+                                }
                             }
                             Dialogue.JumpTo("BigWillyQuestDialogue", "QUEST_ACCEPTED");
                         }
                         catch (Exception ex)
                         {
                             MelonLogger.Error($"[BigWilly] Failed to start quest: {ex.Message}");
+                            Dialogue.JumpTo("BigWillyQuestDialogue", "EXIT");
+                        }
+                    });
+                    
+                    Dialogue.OnChoiceSelected("ACCEPT_HAT", () =>
+                    {
+                        try
+                        {
+                            // Give hat directly when no graffiti spots are available
+                            Items.StaySillyCapCreator.Initialize();
+                            
+                            var capItem = S1API.Items.ItemManager.GetItemDefinition("stay_silly_cap");
+                            if (capItem == null)
+                            {
+                                MelonLogger.Error("[BigWilly] Failed to find 'stay_silly_cap' item definition!");
+                            }
+                            else
+                            {
+                                S1API.Console.ConsoleHelper.AddItemToInventory("stay_silly_cap", 1);
+                                
+                                // Mark as completed so we don't offer this again
+                                _data.QuestCompleted = true;
+                                RequestGameSave();
+                            }
+                            
+                            Dialogue.JumpTo("BigWillyQuestDialogue", "GIVE_HAT_DIRECTLY");
+                        }
+                        catch (Exception ex)
+                        {
+                            MelonLogger.Error($"[BigWilly] Failed to give hat directly: {ex.Message}");
+                            MelonLogger.Error(ex.StackTrace);
                             Dialogue.JumpTo("BigWillyQuestDialogue", "EXIT");
                         }
                     });
@@ -366,7 +426,17 @@ namespace BigWillyMod.NPCs
             
             if (quest == null || quest.QuestState == QuestState.Inactive)
             {
-                return "Hey brother, I need your help spreading the word of the big willy business, think you can help me?";
+                // Check if graffiti spots are available
+                int availableSpots = GraffitiManager.UntaggedSpraySurfaces.Count;
+                
+                if (availableSpots == 0)
+                {
+                    return "Hey brother, have you heard of the Stay Silly merchandise? Here, take this Stay Silly hat!";
+                }
+                else
+                {
+                    return "Hey brother, I need your help spreading the word of the big willy business, think you can help me?";
+                }
             }
             else if (quest.QuestState == QuestState.Active)
             {
@@ -387,6 +457,37 @@ namespace BigWillyMod.NPCs
             {
                 return "Hey brother, what's up?";
             }
+        }
+        
+        private string GetQuestAcceptedText()
+        {
+            var quest = QuestRegistry.GetBigWillyGraffitiQuest();
+            if (quest != null)
+            {
+                int count = quest.RequiredTagCount;
+                return $"Great! Tag {count} {(count == 1 ? "spot" : "spots")} with graffiti for Big Willy. I'll know when you're done!";
+            }
+            return "Great! Tag some spots with graffiti for Big Willy. I'll know when you're done!";
+        }
+        
+        private string GetProgressUpdateText()
+        {
+            var quest = QuestRegistry.GetBigWillyGraffitiQuest();
+            if (quest != null)
+            {
+                int tagged = quest.TaggedCount;
+                int remaining = quest.RequiredTagCount - tagged;
+                
+                if (remaining == 1)
+                {
+                    return $"Keep it up brother, you've tagged {tagged} {(tagged == 1 ? "spot" : "spots")}. Just one more to go!";
+                }
+                else
+                {
+                    return $"Keep it up brother, you've tagged {tagged} {(tagged == 1 ? "spot" : "spots")}. Just {remaining} more to go!";
+                }
+            }
+            return "Keep it up brother! Just a few more to go!";
         }
     }
 }

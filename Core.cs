@@ -33,24 +33,13 @@ namespace BigWillyMod
             // Register lifecycle event for item creation
             GameLifecycle.OnPreLoad += OnPreLoad;
             
-            // Register quest after player spawns
-            Player.LocalPlayerSpawned += OnLocalPlayerSpawned;
-            
             LoggerInstance.Msg($"{Constants.MOD_NAME} v{Constants.MOD_VERSION} initialized");
-        }
-
-        private void OnLocalPlayerSpawned(Player player)
-        {
-
         }
 
         public override void OnApplicationQuit()
         {
             // Cleanup Harmony patches
             GraffitiQuestTracker.Cleanup();
-            
-            // Unsubscribe from events
-            Player.LocalPlayerSpawned -= OnLocalPlayerSpawned;
             
             Instance = null;
         }
