@@ -25,7 +25,7 @@ This mod brings BigWilly into the game as a fully-featured NPC with a custom dai
 - **The Lore King as an NPC**: BigWilly brought to life as a fully-featured character with custom appearance, daily schedule, and personality
 - **"Spread the Word" Quest**: Help BigWilly promote the "Stay Silly" lifestyle by tagging graffiti spots around Hyland Point
 - **Stay Silly Cap Reward**: Earn the exclusive "Stay Silly Cap" - inspired by BigWilly's real merch brand (staysilly.shop)
-- **Dynamic Dialogue**: Context-aware conversations with BigWilly's signature "Stay Silly, brother!" catchphrase
+- **Dynamic Dialogue**: Context-aware conversations with BigWilly's signature "Stay Silly!" catchphrase
 - **Customer Integration**: BigWilly acts as a customer with unique spending habits, drug preferences, and relationship mechanics
 - **Text Message Updates**: Receive progress updates via text messages as you complete quest objectives - just like his community updates!
 
