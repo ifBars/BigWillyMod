@@ -33,7 +33,7 @@ namespace BigWillyMod.Services
         {
             if (_pollingCoroutine != null)
             {
-                MelonLogger.Msg("[LiveStreamChecker] Polling already running");
+                DebugLog.Msg("[LiveStreamChecker] Polling already running");
                 return;
             }
 
@@ -44,7 +44,7 @@ namespace BigWillyMod.Services
             }
 
             _pollingCoroutine = MelonCoroutines.Start(PollStreamStatus());
-            MelonLogger.Msg("[LiveStreamChecker] Started polling for live streams");
+            DebugLog.Msg("[LiveStreamChecker] Started polling for live streams");
         }
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace BigWillyMod.Services
             {
                 MelonCoroutines.Stop(_pollingCoroutine);
                 _pollingCoroutine = null;
-                MelonLogger.Msg("[LiveStreamChecker] Stopped polling");
+                DebugLog.Msg("[LiveStreamChecker] Stopped polling");
             }
         }
 
@@ -129,17 +129,15 @@ namespace BigWillyMod.Services
                 string response = await _httpClient.GetStringAsync(Constants.LiveStream.CHECK_URL);
                 string trimmed = response.Trim();
 
-                // Explicitly offline
                 if (trimmed.Equals("offline", StringComparison.OrdinalIgnoreCase))
                 {
                     DebugLog.Msg("[LiveStreamChecker] Stream check: offline");
                     return false;
                 }
 
-                // Online with uptime info
-                bool onlineUptime = trimmed.Contains("second", StringComparison.OrdinalIgnoreCase) ||
-                                       trimmed.Contains("minute", StringComparison.OrdinalIgnoreCase) ||
-                                       trimmed.Contains("hour", StringComparison.OrdinalIgnoreCase);
+                string[] uptimeIndicators = { "second", "minute", "hour" };
+                bool onlineUptime = Array.Exists(uptimeIndicators, 
+                    indicator => trimmed.Contains(indicator, StringComparison.OrdinalIgnoreCase));
 
                 if (onlineUptime)
                 {
@@ -147,23 +145,25 @@ namespace BigWillyMod.Services
                     return true;
                 }
 
-                // Unexpected response (error page, garbage, etc.) - fail safe to offline
                 DebugLog.Msg($"[LiveStreamChecker] Unexpected response, assuming offline: {trimmed}");
                 return false;
             }
             catch (HttpRequestException ex)
             {
-                DebugLog.Msg($"[LiveStreamChecker] HTTP error checking Twitch: {ex.Message}");
+                DebugLog.Error($"[LiveStreamChecker] HTTP error checking Twitch: {ex.Message}");
+                DebugLog.Error($"[LiveStreamChecker] Stack trace: {ex.StackTrace}");
                 return false;
             }
-            catch (TaskCanceledException)
+            catch (TaskCanceledException ex)
             {
-                DebugLog.Msg("[LiveStreamChecker] Twitch check timed out");
+                DebugLog.Error($"[LiveStreamChecker] Twitch check timed out: {ex.Message}");
+                DebugLog.Error($"[LiveStreamChecker] Stack trace: {ex.StackTrace}");
                 return false;
             }
             catch (Exception ex)
             {
-                DebugLog.Msg($"[LiveStreamChecker] Unexpected error: {ex.Message}");
+                DebugLog.Error($"[LiveStreamChecker] Unexpected error: {ex.Message}");
+                DebugLog.Error($"[LiveStreamChecker] Stack trace: {ex.StackTrace}");
                 return false;
             }
         }
@@ -175,18 +175,19 @@ namespace BigWillyMod.Services
                 var bigWilly = NPC.Get<BigWilly>();
                 if (bigWilly == null)
                 {
-                    DebugLog.Msg("[LiveStreamChecker] BigWilly NPC not found, cannot send notification");
+                    DebugLog.Error("[LiveStreamChecker] BigWilly NPC not found, cannot send notification");
                     return;
                 }
 
                 string message = $"Yo! I'm live right now, come hang out! {Constants.LiveStream.TWITCH_URL}";
                 bigWilly.SendTextMessage(message);
 
-                MelonLogger.Msg("[LiveStreamChecker] Sent live notification to player");
+                DebugLog.Msg("[LiveStreamChecker] Sent live notification to player");
             }
             catch (Exception ex)
             {
-                MelonLogger.Error($"[LiveStreamChecker] Failed to send notification: {ex.Message}");
+                DebugLog.Error($"[LiveStreamChecker] Failed to send notification: {ex.Message}");
+                DebugLog.Error($"[LiveStreamChecker] Stack trace: {ex.StackTrace}");
             }
         }
     }
