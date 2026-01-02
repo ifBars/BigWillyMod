@@ -12,6 +12,7 @@ using S1API.Quests;
 using S1API.Quests.Constants;
 using S1API.Saveables;
 using BigWillyMod.NPCs;
+using BigWillyMod.Utils;
 using UnityEngine;
 
 namespace BigWillyMod.Quests
@@ -198,7 +199,7 @@ namespace BigWillyMod.Quests
         {
             if (string.IsNullOrEmpty(surfaceGuid))
             {
-                MelonLogger.Warning("[BigWillyGraffitiQuest] Attempted to register tag with null/empty GUID");
+                DebugLog.Warning("[BigWillyGraffitiQuest] Attempted to register tag with null/empty GUID");
                 return;
             }
             
@@ -224,11 +225,21 @@ namespace BigWillyMod.Quests
                 }
                 else if (_tagEntry == null)
                 {
-                    MelonLogger.Warning("[BigWillyGraffitiQuest] _tagEntry is null, cannot complete");
+                    DebugLog.Warning("[BigWillyGraffitiQuest] _tagEntry is null, cannot complete");
                 }
 
-                _returnEntry.SetState(QuestState.Active);
-                _returnEntry.Begin();
+                if (_returnEntry != null)
+                {
+                    _returnEntry.SetState(QuestState.Active);
+                    _returnEntry.Begin();
+                }
+                else
+                {
+                    DebugLog.Warning("[BigWillyGraffitiQuest] _returnEntry is null, cannot activate!");
+                }
+
+                // Rebuild Big Willy's dialogue now that quest is ready to turn in
+                RebuildBigWillyDialogue();
 
                 RequestGameSave();
             }
@@ -246,7 +257,7 @@ namespace BigWillyMod.Quests
         {
             if (_rewardGranted)
             {
-                MelonLogger.Warning("[BigWillyGraffitiQuest] Reward already granted, skipping.");
+                DebugLog.Msg("[BigWillyGraffitiQuest] Reward already granted, skipping.");
                 return;
             }
             
@@ -280,7 +291,7 @@ namespace BigWillyMod.Quests
                 var bigWilly = NPC.Get<BigWilly>();
                 if (bigWilly == null)
                 {
-                    MelonLogger.Warning("[BigWillyGraffitiQuest] Big Willy NPC not found, cannot send text message");
+                    DebugLog.Msg("[BigWillyGraffitiQuest] Big Willy NPC not found, cannot send text message");
                     return;
                 }
                 
@@ -329,7 +340,7 @@ namespace BigWillyMod.Quests
                 waited += checkInterval;
             }
 
-            MelonLogger.Warning("[BigWillyGraffitiQuest] Timeout waiting for Big Willy NPC to spawn. Quest entry created without NPC attachment.");
+            DebugLog.Msg("[BigWillyGraffitiQuest] Timeout waiting for Big Willy NPC to spawn. Quest entry created without NPC attachment.");
         }
 
         /// <summary>
@@ -356,7 +367,7 @@ namespace BigWillyMod.Quests
                 var player = Player.Local;
                 if (player == null)
                 {
-                    MelonLogger.Warning("[BigWillyGraffitiQuest] Player.Local is null, cannot update POI");
+                    DebugLog.Msg("[BigWillyGraffitiQuest] Player.Local is null, cannot update POI");
                     return;
                 }
 
@@ -399,13 +410,13 @@ namespace BigWillyMod.Quests
                         }
                         else
                         {
-                            MelonLogger.Warning("[BigWillyGraffitiQuest] No untagged surfaces found to point to");
+                            DebugLog.Msg("[BigWillyGraffitiQuest] No untagged surfaces found to point to");
                         }
                     }
                 }
                 else
                 {
-                    MelonLogger.Warning("[BigWillyGraffitiQuest] No untagged surfaces found in the game");
+                    DebugLog.Msg("[BigWillyGraffitiQuest] No untagged surfaces found in the game");
                 }
             }
             catch (Exception ex)
@@ -417,12 +428,47 @@ namespace BigWillyMod.Quests
 
         public int TaggedCount => _taggedSurfaceIds.Count;
         
-        public bool IsReadyToTurnIn => _taggedSurfaceIds.Count >= _requiredTagCount;
+        public bool IsReadyToTurnIn
+        {
+            get
+            {
+                bool ready = _taggedSurfaceIds.Count >= _requiredTagCount;
+                DebugLog.Msg($"[BigWillyGraffitiQuest] IsReadyToTurnIn check: {ready} (Tagged: {_taggedSurfaceIds.Count}/{_requiredTagCount})");
+                return ready;
+            }
+        }
         
         /// <summary>
         /// Gets the current quest state. Public accessor for the protected QuestState property.
         /// </summary>
         public new QuestState QuestState => base.QuestState;
+        
+        /// <summary>
+        /// Rebuilds Big Willy's dialogue container to reflect the current quest state.
+        /// Called when the quest becomes ready to turn in.
+        /// </summary>
+        private void RebuildBigWillyDialogue()
+        {
+            try
+            {
+                var npc = NPC.Get<BigWillyMod.NPCs.BigWilly>();
+                var bigWilly = npc as BigWillyMod.NPCs.BigWilly;
+                if (bigWilly != null)
+                {
+                    DebugLog.Msg("[BigWillyGraffitiQuest] Quest ready to turn in - rebuilding Big Willy's dialogue");
+                    bigWilly.RebuildQuestDialogue();
+                }
+                else
+                {
+                    DebugLog.Warning("[BigWillyGraffitiQuest] Big Willy NPC not found, cannot rebuild dialogue");
+                }
+            }
+            catch (Exception ex)
+            {
+                MelonLogger.Error($"[BigWillyGraffitiQuest] Failed to rebuild Big Willy dialogue: {ex.Message}");
+                MelonLogger.Error(ex.StackTrace);
+            }
+        }
     }
 }
 

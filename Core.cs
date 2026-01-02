@@ -23,9 +23,22 @@ namespace BigWillyMod
         private bool _itemsInitialized = false;
         private bool _shopsInitialized = false;
 
+        private static MelonPreferences_Category? _preferencesCategory;
+        private static MelonPreferences_Entry<bool>? _debugLogsEntry;
+
+        /// <summary>
+        /// Whether debug logs should be shown in the console.
+        /// </summary>
+        public static bool DebugLogsEnabled => _debugLogsEntry?.Value ?? false;
+
         public override void OnLateInitializeMelon()
         {
             Instance = this;
+            
+            // Initialize preferences
+            _preferencesCategory = MelonPreferences.CreateCategory("BigWillyMod");
+            _debugLogsEntry = _preferencesCategory.CreateEntry("DebugLogs", false, "Enable Debug Logs", "Show detailed debug messages in the console");
+            _preferencesCategory.SaveToFile(false);
             
             // Initialize Harmony patches for graffiti tracking
             GraffitiQuestTracker.Initialize();

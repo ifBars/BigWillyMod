@@ -28,8 +28,6 @@ namespace BigWillyMod.Items
         
         private const string SOURCE_CAP_PATH = "avatar/accessories/head/cap/Cap";
         private const string CUSTOM_CAP_RESOURCE_PATH = "BigWillyMod/Accessories/StaySillyCap";
-        
-        private static bool _initialized = false;
 
         /// <summary>
         /// Initializes the Stay Silly Cap item.
@@ -37,12 +35,6 @@ namespace BigWillyMod.Items
         /// </summary>
         public static void Initialize()
         {
-            if (_initialized)
-            {
-                MelonLogger.Warning("[StaySillyCap] Already initialized, skipping...");
-                return;
-            }
-
             try
             {
                 // Step 1: Create and register custom accessory prefab
@@ -58,8 +50,6 @@ namespace BigWillyMod.Items
                     MelonLogger.Error("[StaySillyCap] Failed to create clothing item");
                     return;
                 }
-
-                _initialized = true;
             }
             catch (Exception ex)
             {
@@ -74,12 +64,6 @@ namespace BigWillyMod.Items
         /// </summary>
         public static void AddToShops()
         {
-            if (!_initialized)
-            {
-                MelonLogger.Warning("[StaySillyCap] Cannot add to shops - item not initialized");
-                return;
-            }
-
             try
             {
                 var item = ItemManager.GetItemDefinition(ITEM_ID);
@@ -101,6 +85,13 @@ namespace BigWillyMod.Items
         {
             try
             {
+                // Check if the custom accessory is already registered
+                if (RuntimeResourceRegistry.IsRegistered(CUSTOM_CAP_RESOURCE_PATH))
+                {
+                    MelonLogger.Msg($"[StaySillyCap] Custom accessory already registered at '{CUSTOM_CAP_RESOURCE_PATH}', skipping creation");
+                    return true;
+                }
+
                 // Load custom texture from embedded resources
                 var assembly = Assembly.GetExecutingAssembly();
                 var customTexture = TextureUtils.LoadTextureFromResource(

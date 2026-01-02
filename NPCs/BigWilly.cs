@@ -17,6 +17,7 @@ using S1API.Properties;
 using S1API.Quests.Constants;
 using S1API.Saveables;
 using BigWillyMod.Quests;
+using BigWillyMod.Utils;
 using MelonLoader;
 using UnityEngine;
 using S1API.Graffiti;
@@ -165,95 +166,8 @@ namespace BigWillyMod.NPCs
                 // Only set up quest dialogue if quest is not completed
                 if (!questCompleted)
                 {
-                    Dialogue.BuildAndRegisterContainer("BigWillyQuestDialogue", c =>
-                    {
-                        // Entry node - checks quest state and routes accordingly
-                        c.AddNode("ENTRY", GetEntryDialogueText(), ch =>
-                        {
-                            var currentQuest = QuestRegistry.GetBigWillyGraffitiQuest();
-                            
-                            // Check saved completion state first (quest may have been removed after completion)
-                            if (_data.QuestCompleted)
-                            {
-                                // Quest completed - stop using quest dialogue container
-                                ch.Add("OK", "Thanks for the help!", "EXIT");
-                            }
-                            else if (currentQuest == null || currentQuest.QuestState == QuestState.Inactive)
-                            {
-                                // Quest not started - offer quest or alternative reward based on available spots
-                                int availableSpots = GraffitiManager.UntaggedSpraySurfaces.Count;
-                                
-                                if (availableSpots == 0)
-                                {
-                                    // No spots available - offer hat directly
-                                    ch.Add("ACCEPT_HAT", "Sure, I'll take the hat!", "GIVE_HAT_DIRECTLY")
-                                      .Add("DECLINE", "Not right now", "DECLINE_RESPONSE");
-                                }
-                                else
-                                {
-                                    // Spots available - offer quest
-                                    ch.Add("ACCEPT_HELP", $"Yeah, I'll spread the word", "QUEST_ACCEPTED")
-                                      .Add("DECLINE", "Not right now", "DECLINE_RESPONSE");
-                                }
-                            }
-                            else if (currentQuest.QuestState == QuestState.Completed)
-                            {
-                                // Quest completed - mark in saved state and stop using quest dialogue container
-                                _data.QuestCompleted = true;
-                                RequestGameSave();
-                                ch.Add("OK", "Thanks for the help!", "EXIT");
-                            }
-                            else if (currentQuest.QuestState == QuestState.Active)
-                            {
-                                if (currentQuest.IsReadyToTurnIn)
-                                {
-                                    // Ready to turn in
-                                    ch.Add("TURN_IN", $"I've tagged {currentQuest.RequiredTagCount} {(currentQuest.RequiredTagCount == 1 ? "spot" : "spots")}!", "TURN_IN_REWARD");
-                                }
-                                else
-                                {
-                                    // In progress
-                                    ch.Add("CHECK_PROGRESS", "How am I doing?", "PROGRESS_UPDATE")
-                                      .Add("LEAVE", "I'll keep working on it", "LEAVE_RESPONSE");
-                                }
-                            }
-                            else
-                            {
-                                // Quest failed or other state
-                                ch.Add("OK", "Okay", "EXIT");
-                            }
-                        });
-                        
-                        // Quest accepted
-                        c.AddNode("QUEST_ACCEPTED", GetQuestAcceptedText(), ch =>
-                        {
-                            ch.Add("GOT_IT", "Got it!", "EXIT");
-                        });
-                        
-                        // Give hat directly (when no graffiti spots available)
-                        c.AddNode("GIVE_HAT_DIRECTLY", "Stay silly, brother!", ch =>
-                        {
-                            ch.Add("THANKS", "Thanks!", "EXIT");
-                        });
-                        
-                        // Decline response
-                        c.AddNode("DECLINE_RESPONSE", "Alright, let me know if you change your mind!");
-                        
-                        // Progress update
-                        c.AddNode("PROGRESS_UPDATE", GetProgressUpdateText());
-                        
-                        // Leave response
-                        c.AddNode("LEAVE_RESPONSE", "Thanks for helping spread the word!");
-                        
-                        // Turn in reward
-                        c.AddNode("TURN_IN_REWARD", "Great work brother! Spreading the word like a pro. Here, take this cap.", ch =>
-                        {
-                            ch.Add("THANKS", "Thanks!", "EXIT");
-                        });
-                        
-                        // Exit node
-                        c.AddNode("EXIT", "Stay silly, brother!");
-                    });
+                    // Build the dialogue container with current quest state
+                    BuildQuestDialogueContainer();
                     
                     // Set up choice callbacks
                     Dialogue.OnChoiceSelected("ACCEPT_HELP", () =>
@@ -420,9 +334,138 @@ namespace BigWillyMod.NPCs
             }
         }
 
+        /// <summary>
+        /// Rebuilds the quest dialogue container with current quest state.
+        /// Called when quest state changes (e.g., becomes ready to turn in).
+        /// </summary>
+        public void RebuildQuestDialogue()
+        {
+            DebugLog.Msg("[BigWilly] RebuildQuestDialogue called - rebuilding dialogue container");
+            BuildQuestDialogueContainer();
+            // Re-apply the override so the DialogueController points to the new container
+            Dialogue.UseContainerOnInteract("BigWillyQuestDialogue");
+        }
+
+        /// <summary>
+        /// Builds/rebuilds the quest dialogue container with current quest state.
+        /// Called initially and when quest state changes.
+        /// </summary>
+        private void BuildQuestDialogueContainer()
+        {
+            DebugLog.Msg("[BigWilly] BuildQuestDialogueContainer called");
+            
+            Dialogue.BuildAndRegisterContainer("BigWillyQuestDialogue", c =>
+            {
+                var currentQuest = QuestRegistry.GetBigWillyGraffitiQuest();
+                
+                DebugLog.Msg($"[BigWilly] Building container - Quest: {(currentQuest != null ? "EXISTS" : "NULL")}, QuestCompleted flag: {_data.QuestCompleted}");
+                if (currentQuest != null)
+                {
+                    DebugLog.Msg($"[BigWilly] Quest state: {currentQuest.QuestState}, Tagged: {currentQuest.TaggedCount}/{currentQuest.RequiredTagCount}, ReadyToTurnIn: {currentQuest.IsReadyToTurnIn}");
+                }
+                
+                // Entry node - checks quest state and routes accordingly
+                c.AddNode("ENTRY", GetEntryDialogueText(), ch =>
+                {
+                    DebugLog.Msg("[BigWilly] ENTRY node choices callback executing");
+                    
+                    // Check saved completion state first (quest may have been removed after completion)
+                    if (_data.QuestCompleted)
+                    {
+                        DebugLog.Msg("[BigWilly] Quest completed path - adding OK choice");
+                        // Quest completed - stop using quest dialogue container
+                        ch.Add("OK", "Thanks for the help!", "EXIT");
+                    }
+                    else if (currentQuest == null || currentQuest.QuestState == QuestState.Inactive)
+                    {
+                        DebugLog.Msg("[BigWilly] Quest inactive/null path");
+                        // Quest not started - offer quest or alternative reward based on available spots
+                        int availableSpots = GraffitiManager.UntaggedSpraySurfaces.Count;
+                        
+                        if (availableSpots == 0)
+                        {
+                            DebugLog.Msg("[BigWilly] No graffiti spots - offering hat directly");
+                            // No spots available - offer hat directly
+                            ch.Add("ACCEPT_HAT", "Sure, I'll take the hat!", "GIVE_HAT_DIRECTLY")
+                              .Add("DECLINE", "Not right now", "DECLINE_RESPONSE");
+                        }
+                        else
+                        {
+                            DebugLog.Msg($"[BigWilly] {availableSpots} graffiti spots available - offering quest");
+                            // Spots available - offer quest
+                            ch.Add("ACCEPT_HELP", $"Yeah, I'll spread the word", "QUEST_ACCEPTED")
+                              .Add("DECLINE", "Not right now", "DECLINE_RESPONSE");
+                        }
+                    }
+                    else if (currentQuest.QuestState == QuestState.Completed)
+                    {
+                        DebugLog.Msg("[BigWilly] Quest state is Completed - marking in saved state");
+                        // Quest completed - mark in saved state and stop using quest dialogue container
+                        _data.QuestCompleted = true;
+                        RequestGameSave();
+                        ch.Add("OK", "Thanks for the help!", "EXIT");
+                    }
+                    else if (currentQuest.QuestState == QuestState.Active)
+                    {
+                        if (currentQuest.IsReadyToTurnIn)
+                        {
+                            DebugLog.Msg("[BigWilly] Quest active and ready to turn in - adding TURN_IN choice");
+                            // Ready to turn in
+                            ch.Add("TURN_IN", $"I've tagged {currentQuest.RequiredTagCount} {(currentQuest.RequiredTagCount == 1 ? "spot" : "spots")}!", "TURN_IN_REWARD");
+                        }
+                        else
+                        {
+                            DebugLog.Msg("[BigWilly] Quest active but not ready - adding progress choices");
+                            // In progress
+                            ch.Add("CHECK_PROGRESS", "How am I doing?", "PROGRESS_UPDATE")
+                              .Add("LEAVE", "I'll keep working on it", "LEAVE_RESPONSE");
+                        }
+                    }
+                    else
+                    {
+                        // Quest failed or other state
+                        DebugLog.Warning($"[BigWilly] Unexpected quest state: {currentQuest.QuestState}");
+                        ch.Add("OK", "Okay", "EXIT");
+                    }
+                });
+                
+                // Quest accepted - text generated dynamically
+                c.AddNode("QUEST_ACCEPTED", GetQuestAcceptedText(), ch =>
+                {
+                    ch.Add("GOT_IT", "Got it!", "EXIT");
+                });
+                
+                // Give hat directly (when no graffiti spots available)
+                c.AddNode("GIVE_HAT_DIRECTLY", "Stay silly, brother!", ch =>
+                {
+                    ch.Add("THANKS", "Thanks!", "EXIT");
+                });
+                
+                // Decline response
+                c.AddNode("DECLINE_RESPONSE", "Alright, let me know if you change your mind!");
+                
+                // Progress update - text generated dynamically
+                c.AddNode("PROGRESS_UPDATE", GetProgressUpdateText());
+                
+                // Leave response
+                c.AddNode("LEAVE_RESPONSE", "Thanks for helping spread the word!");
+                
+                // Turn in reward
+                c.AddNode("TURN_IN_REWARD", "Great work brother! Spreading the word like a pro. Here, take this cap.", ch =>
+                {
+                    ch.Add("THANKS", "Thanks!", "EXIT");
+                });
+                
+                // Exit node
+                c.AddNode("EXIT", "Stay silly, brother!");
+            });
+        }
+
         private string GetEntryDialogueText()
         {
             var quest = QuestRegistry.GetBigWillyGraffitiQuest();
+            
+            DebugLog.Msg($"[BigWilly] GetEntryDialogueText - Quest: {(quest != null ? "EXISTS" : "NULL")}, QuestCompleted: {_data.QuestCompleted}");
             
             if (quest == null || quest.QuestState == QuestState.Inactive)
             {
@@ -431,10 +474,12 @@ namespace BigWillyMod.NPCs
                 
                 if (availableSpots == 0)
                 {
+                    DebugLog.Msg("[BigWilly] Entry text: No spots, offering hat");
                     return "Hey brother, have you heard of the Stay Silly merchandise? Here, take this Stay Silly hat!";
                 }
                 else
                 {
+                    DebugLog.Msg($"[BigWilly] Entry text: {availableSpots} spots, offering quest");
                     return "Hey brother, I need your help spreading the word of the big willy business, think you can help me?";
                 }
             }
@@ -442,19 +487,23 @@ namespace BigWillyMod.NPCs
             {
                 if (quest.IsReadyToTurnIn)
                 {
+                    DebugLog.Msg("[BigWilly] Entry text: Quest ready to turn in");
                     return "Hey brother! I see you've been busy spreading the word. Great work!";
                 }
                 else
                 {
+                    DebugLog.Msg("[BigWilly] Entry text: Quest in progress");
                     return "Hey brother! How's the tagging going?";
                 }
             }
             else if (quest.QuestState == QuestState.Completed)
             {
+                DebugLog.Msg("[BigWilly] Entry text: Quest completed");
                 return "Looking silly, brother! Thanks for the help.";
             }
             else
             {
+                DebugLog.Msg($"[BigWilly] Entry text: Unknown state {quest.QuestState}");
                 return "Hey brother, what's up?";
             }
         }

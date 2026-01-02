@@ -14,10 +14,7 @@ namespace BigWillyMod.Quests
         public static void Initialize()
         {
             if (_subscribed)
-            {
-                MelonLogger.Warning("[GraffitiQuestTracker] Already initialized, skipping...");
                 return;
-            }
 
             GraffitiEvents.GraffitiCompleted += OnGraffitiCompleted;
             _subscribed = true;
@@ -37,28 +34,15 @@ namespace BigWillyMod.Quests
             try
             {
                 if (spraySurface == null)
-                {
-                    MelonLogger.Warning("[GraffitiQuestTracker] SpraySurface is null");
                     return;
-                }
 
                 string surfaceGuid = spraySurface.GUID.ToString();
                 var quest = QuestRegistry.GetBigWillyGraffitiQuest();
-                if (quest == null)
-                {
-                    MelonLogger.Warning("[GraffitiQuestTracker] Quest not found - quest may not exist yet or not be created");
+                if (quest == null || quest.QuestEntries == null || quest.QuestEntries.Count == 0)
                     return;
-                }
-
-                if (quest.QuestEntries == null || quest.QuestEntries.Count == 0)
-                {
-                    MelonLogger.Warning("[GraffitiQuestTracker] Quest has no entries");
-                    return;
-                }
 
                 var firstEntry = quest.QuestEntries[0];
-                var entryState = firstEntry.State;
-                if (entryState != QuestState.Active)
+                if (firstEntry.State != QuestState.Active)
                     return;
                 
                 quest.RegisterTag(surfaceGuid);
@@ -66,7 +50,7 @@ namespace BigWillyMod.Quests
             catch (Exception ex)
             {
                 MelonLogger.Error($"[GraffitiQuestTracker] Error in OnGraffitiCompleted: {ex.Message}");
-                MelonLogger.Error($"[GraffitiQuestTracker] StackTrace: {ex.StackTrace}");
+                MelonLogger.Error(ex.StackTrace);
             }
         }
     }

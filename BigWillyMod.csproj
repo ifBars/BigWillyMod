@@ -194,7 +194,7 @@
 
   <ItemGroup>
     <Compile Include="Core.cs" />
-    <Compile Include="Utils\Constants.cs" />
+    <Compile Include="Utils\*.cs" />
     <Compile Include="Quests\*.cs" />
     <Compile Include="NPCs\*.cs" />
     <Compile Include="Items\*.cs" />
