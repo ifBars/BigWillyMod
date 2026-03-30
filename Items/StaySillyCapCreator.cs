@@ -1,6 +1,6 @@
 using MelonLoader;
 using HarmonyLib;
-using S1API.Internal.Utils;
+using S1API.Utils;
 using S1API.Items;
 using S1API.Rendering;
 using S1API.Shops;
@@ -166,8 +166,6 @@ namespace BigWillyMod.Items
                     .WithColorable(false) // Custom textures, not colorable
                     .WithDefaultColor(ClothingColor.White)
                     .WithPricing(basePurchasePrice: 75f, resellMultiplier: 0.5f)
-                    .WithKeywords("cap", "hat", "silly", "custom", "bigwilly")
-                    .WithLabelColor(new Color(1f, 0.8f, 0.2f)) // Golden yellow tint
                     .Build();
 
                 // Only set icon if we have a custom one (otherwise keep the cloned icon from base cap)
