@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
+using System.Reflection;
 using MelonLoader;
 using S1API.Console;
 using S1API.Entities;
@@ -11,6 +11,7 @@ using S1API.Items;
 using S1API.Quests;
 using S1API.Quests.Constants;
 using S1API.Saveables;
+using S1API.Utils;
 using BigWillyMod.NPCs;
 using BigWillyMod.Utils;
 using UnityEngine;
@@ -20,6 +21,9 @@ namespace BigWillyMod.Quests
     public class BigWillyGraffitiQuest : Quest
     {
         private const string QUEST_ID = "big_willy_graffiti_quest";
+        private const string QuestIconResourcePath = "BigWillyMod.Resources.quest_icon.png";
+        private static Sprite? _questIcon;
+        private static bool _questIconLoadAttempted;
         
         [SaveableField("taggedSurfaces")]
         private HashSet<string> _taggedSurfaceIds = new HashSet<string>();
@@ -30,8 +34,8 @@ namespace BigWillyMod.Quests
         [SaveableField("requiredTagCount")]
         private int _requiredTagCount = 5;
         
-        private QuestEntry _tagEntry;
-        private QuestEntry _returnEntry;
+        private QuestEntry? _tagEntry;
+        private QuestEntry? _returnEntry;
         
         /// <summary>
         /// Sets the required number of tags for this quest.
@@ -61,6 +65,8 @@ namespace BigWillyMod.Quests
             $"Big Willy needs your help spreading the word about his business! " +
             $"Tag {_requiredTagCount} {(_requiredTagCount == 1 ? "spot" : "different spots")} around town with graffiti to help promote Big Willy's enterprise. " +
             $"Once you've completed all {_requiredTagCount} {(_requiredTagCount == 1 ? "tag" : "tags")}, return to Big Willy to claim your reward.";
+
+        protected override Sprite? QuestIcon => GetQuestIcon();
         
         protected override bool AutoBegin => false;
 
@@ -78,10 +84,20 @@ namespace BigWillyMod.Quests
             if (QuestEntries.Count == 0)
             {
                 // Entry 1: Tag spots for Big Willy
-                _tagEntry = AddEntry($"Tag {_requiredTagCount} {(_requiredTagCount == 1 ? "spot" : "spots")} for Big Willy ({_taggedSurfaceIds.Count}/{_requiredTagCount})");
+                SpraySurface? initialSurface = null;
+                var player = Player.Local;
+                if (player != null)
+                {
+                    initialSurface = FindNearestEligibleSurface(player.Position);
+                }
+
+                _tagEntry = AddEntry(
+                    $"Tag {_requiredTagCount} {(_requiredTagCount == 1 ? "spot" : "spots")} for Big Willy ({_taggedSurfaceIds.Count}/{_requiredTagCount})",
+                    initialSurface?.Position
+                );
                 _tagEntry.Begin();
                 
-                // Update POI to nearest untagged surface (wait a frame for GraffitiManager to initialize)
+                // Re-evaluate after a frame so the quest points at the correct surface even if graffiti data comes up late.
                 MelonCoroutines.Start(UpdatePOIToNearestUntaggedSurfaceDelayed());
 
                 // Entry 2: Return to Big Willy (initially hidden)
@@ -197,6 +213,8 @@ namespace BigWillyMod.Quests
 
         public void RegisterTag(string surfaceGuid)
         {
+            DebugLog.Msg($"[BigWillyGraffitiQuest] RegisterTag called with GUID: {surfaceGuid}");
+            
             if (string.IsNullOrEmpty(surfaceGuid))
             {
                 DebugLog.Warning("[BigWillyGraffitiQuest] Attempted to register tag with null/empty GUID");
@@ -204,9 +222,14 @@ namespace BigWillyMod.Quests
             }
             
             if (_taggedSurfaceIds.Contains(surfaceGuid))
+            {
+                DebugLog.Msg($"[BigWillyGraffitiQuest] GUID {surfaceGuid} already tagged, ignoring");
                 return;
+            }
             
             _taggedSurfaceIds.Add(surfaceGuid);
+            DebugLog.Msg($"[BigWillyGraffitiQuest] Tag registered! Count: {_taggedSurfaceIds.Count}/{_requiredTagCount}");
+            
             UpdateTagEntryText();
             RequestGameSave();
             SendProgressTextMessage();
@@ -219,6 +242,8 @@ namespace BigWillyMod.Quests
             
             if (_taggedSurfaceIds.Count >= _requiredTagCount)
             {
+                DebugLog.Msg($"[BigWillyGraffitiQuest] All tags complete! Activating return entry...");
+                
                 if (_tagEntry != null && _tagEntry.State != QuestState.Completed)
                 {
                     _tagEntry.Complete();
@@ -328,11 +353,8 @@ namespace BigWillyMod.Quests
             while (waited < timeout)
             {
                 var bigWilly = NPC.Get<BigWilly>();
-                if (bigWilly != null)
+                if (bigWilly != null && _returnEntry != null && _returnEntry.SetPOIToNPC(bigWilly))
                 {
-                    if (_returnEntry != null)
-                        _returnEntry.SetPOIToNPC(bigWilly);
-                    
                     yield break;
                 }
                 
@@ -371,52 +393,15 @@ namespace BigWillyMod.Quests
                     return;
                 }
 
-                // Find nearest untagged surface
-                var nearestSurface = GraffitiManager.FindNearestUntaggedSurface(player.Position);
+                SpraySurface? nearestSurface = FindNearestEligibleSurface(player.Position);
                 if (nearestSurface != null)
                 {
-                    // Filter out surfaces that have already been tagged
-                    string surfaceGuid = nearestSurface.GUID.ToString();
-                    if (!_taggedSurfaceIds.Contains(surfaceGuid))
-                    {
-                        _tagEntry.SetPOIToSpraySurface(nearestSurface);
-                    }
-                    else
-                    {
-                        // This surface was already tagged, try to find another one
-                        // Get all untagged surfaces and filter out tagged ones
-                        var untaggedSurfaces = GraffitiManager.GetUntaggedSpraySurfaces()
-                            .Where(s => !_taggedSurfaceIds.Contains(s.GUID.ToString()))
-                            .ToList();
-
-                        if (untaggedSurfaces.Count > 0)
-                        {
-                            // Find nearest from filtered list
-                            SpraySurface? nextNearest = null;
-                            float nearestDistance = float.MaxValue;
-
-                            foreach (var surface in untaggedSurfaces)
-                            {
-                                float distance = Vector3.Distance(player.Position, surface.Position);
-                                if (distance < nearestDistance)
-                                {
-                                    nearestDistance = distance;
-                                    nextNearest = surface;
-                                }
-                            }
-
-                            if (nextNearest != null)
-                                _tagEntry.SetPOIToSpraySurface(nextNearest);
-                        }
-                        else
-                        {
-                            DebugLog.Msg("[BigWillyGraffitiQuest] No untagged surfaces found to point to");
-                        }
-                    }
+                    _tagEntry.SetPOIToSpraySurface(nearestSurface);
                 }
                 else
                 {
-                    DebugLog.Msg("[BigWillyGraffitiQuest] No untagged surfaces found in the game");
+                    _tagEntry.ClearPOI();
+                    DebugLog.Msg("[BigWillyGraffitiQuest] No eligible untagged surfaces found for quest POI");
                 }
             }
             catch (Exception ex)
@@ -424,6 +409,35 @@ namespace BigWillyMod.Quests
                 MelonLogger.Error($"[BigWillyGraffitiQuest] Failed to update POI to nearest untagged surface: {ex.Message}");
                 MelonLogger.Error(ex.StackTrace);
             }
+        }
+
+        private SpraySurface? FindNearestEligibleSurface(Vector3 position)
+        {
+            return GraffitiManager.FindNearestUntaggedSurface(
+                position,
+                surface => !_taggedSurfaceIds.Contains(surface.GUID.ToString())
+            );
+        }
+
+        private static Sprite? GetQuestIcon()
+        {
+            if (_questIconLoadAttempted)
+            {
+                return _questIcon;
+            }
+
+            _questIconLoadAttempted = true;
+            _questIcon = ImageUtils.LoadImageFromResource(
+                Assembly.GetExecutingAssembly(),
+                QuestIconResourcePath
+            );
+
+            if (_questIcon == null)
+            {
+                DebugLog.Warning($"[BigWillyGraffitiQuest] Failed to load quest icon resource '{QuestIconResourcePath}'");
+            }
+
+            return _questIcon;
         }
 
         public int TaggedCount => _taggedSurfaceIds.Count;

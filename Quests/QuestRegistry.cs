@@ -1,6 +1,5 @@
 using S1API.Quests;
 using MelonLoader;
-using System.Collections.Generic;
 using System.Reflection;
 
 namespace BigWillyMod.Quests
@@ -41,7 +40,7 @@ namespace BigWillyMod.Quests
             return null;
         }
 
-        public static BigWillyGraffitiQuest CreateBigWillyGraffitiQuest()
+        public static BigWillyGraffitiQuest? CreateBigWillyGraffitiQuest()
         {
             var existing = GetBigWillyGraffitiQuest();
             if (existing != null)

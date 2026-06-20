@@ -1,0 +1,7 @@
+id = "stay_silly_cap"
+name = "Stay Silly Cap"
+description = "A custom cap that helps you stay silly at all times."
+price = 75
+enabled = true
+shopNames = ["Thrifty Threads"]
+iconPath = "icon.png"
